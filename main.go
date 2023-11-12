@@ -15,14 +15,19 @@ func main() {
 
 	var path string
 	var duration int
+	var isShuffle bool
 
 	flag.StringVar(&path, "file", "problems.csv", "Specify a CSV file containing records")
 	flag.IntVar(&duration, "limit", 30, "Specify a quiz duration")
+	flag.BoolVar(&isShuffle, "shuffle", false, "Specify shuffle option")
 
 	flag.Parse()
 
 	records, err := ReadCSV(path)
-	shuffle(records)
+
+	if isShuffle {
+		shuffle(records)
+	}
 
 	if err != nil {
 		log.Fatal("Error while reading the file", err)
@@ -55,7 +60,7 @@ func main() {
 			var userInput string
 			fmt.Scan(&userInput)
 			userInput = strings.Trim(userInput, " \n")
-			if userInput == record[1] {
+			if strings.EqualFold(userInput, record[0]) {
 				correctCount += 1
 			} else {
 				incorrectCount += 1
