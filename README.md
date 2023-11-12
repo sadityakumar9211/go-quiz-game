@@ -12,3 +12,4 @@ Usage of /var/folders/gn/x2p7hl2j66s0ydn_tzsxjhg80000gn/T/go-build1318027890/b00
 ```
 
 ## Related Read: 
+https://saditya9211.hashnode.dev/building-a-cli-quiz-application-in-go
