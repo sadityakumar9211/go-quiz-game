@@ -11,6 +11,11 @@ import (
 	"time"
 )
 
+type problem struct {
+	q string
+	a string
+}
+
 func main() {
 
 	var path string
@@ -29,6 +34,8 @@ func main() {
 		shuffle(records)
 	}
 
+	problems := getProblem(records)
+
 	if err != nil {
 		log.Fatal("Error while reading the file", err)
 	}
@@ -42,25 +49,23 @@ func main() {
 
 	var correctCount int
 	var incorrectCount int
-	doneC := make(chan struct{})
 
-	// kind of a timer which sends of a signal to doneC channel to
-	// which another go routinte is listening for stopping the quiz
-	go func() {
-		time.Sleep(time.Duration(duration * int(time.Second)))
-		doneC <- struct{}{}
-	}()
+	timer := time.NewTimer(time.Duration(duration) * time.Second)
 
-	for i, record := range records {
-		select {
-		case <-doneC:
-			goto end
-		default:
-			fmt.Printf("Problem #%v: %v - ", i+1, record[0])
+	for i, problem := range problems {
+		fmt.Printf("Problem #%v: %v - ", i+1, problem.q)
+		userInputCh := make(chan *string)
+		go func() {
 			var userInput string
 			fmt.Scan(&userInput)
-			userInput = strings.Trim(userInput, " \n")
-			if strings.EqualFold(userInput, record[0]) {
+			userInputCh <- &userInput
+		}()
+
+		select {
+		case <-timer.C:
+			goto end
+		case userInput := <-userInputCh:
+			if strings.EqualFold(*userInput, problem.a) {
 				correctCount += 1
 			} else {
 				incorrectCount += 1
@@ -68,9 +73,20 @@ func main() {
 		}
 	}
 end:
-	fmt.Println("You have successfully completed the quiz game.")
+	fmt.Println("\nYou have successfully completed the quiz game.")
 	fmt.Printf("Your Score: %v out of %v", correctCount, correctCount+incorrectCount)
 
+}
+
+func getProblem(records [][]string) []problem {
+	problems := make([]problem, len(records))
+	for i, record := range records {
+		go func(i int, record []string) {
+			problems[i].q = record[0]
+			problems[i].a = record[1]
+		}(i, record)
+	}
+	return problems
 }
 
 // Reads the CSV file and prints its content line by line
